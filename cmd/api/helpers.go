@@ -152,3 +152,16 @@ func (app *application) readInt(
 
 	return i
 }
+
+func (app *application) background(fn func()) {
+	go func() {
+		// Recover any panic
+		defer func() {
+			if err := recover(); err != nil {
+				app.logger.Error(fmt.Sprintf("%v", err))
+			}
+		}()
+
+		fn()
+	}()
+}
