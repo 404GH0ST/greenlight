@@ -7,6 +7,7 @@ import (
 	"log"
 	"log/slog"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -38,6 +39,9 @@ type config struct {
 		username string
 		password string
 		sender   string
+	}
+	cors struct {
+		trustedOrigins []string
 	}
 }
 
@@ -89,6 +93,15 @@ func main() {
 		"smtp-sender",
 		"Greenlight <no-reply@greenlight.404gh0st.live>",
 		"SMTP sender",
+	)
+
+	flag.Func(
+		"cors-trusted-origins",
+		"Trusted CORS origins (space required)",
+		func(val string) error {
+			cfg.cors.trustedOrigins = strings.Fields(val)
+			return nil
+		},
 	)
 
 	flag.Parse()
