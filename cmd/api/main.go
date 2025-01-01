@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"expvar"
 	"flag"
-	"log"
+	"fmt"
 	"log/slog"
 	"os"
 	"runtime"
@@ -15,11 +15,11 @@ import (
 
 	"github.com/404GH0ST/greenlight/internal/data"
 	"github.com/404GH0ST/greenlight/internal/mailer"
-	"github.com/joho/godotenv"
+	"github.com/404GH0ST/greenlight/internal/vcs"
 	_ "github.com/lib/pq"
 )
 
-const version = "1.0.0"
+var version = vcs.Version()
 
 type config struct {
 	port int
@@ -56,22 +56,12 @@ type application struct {
 }
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-
 	var cfg config
 
 	flag.IntVar(&cfg.port, "port", 4000, "API server port")
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
 
-	flag.StringVar(
-		&cfg.db.dsn,
-		"db-dsn",
-		os.Getenv("GREENLIGHT_DB_DSN"),
-		"PostgreSQL DSN",
-	)
+	flag.StringVar(&cfg.db.dsn, "db-dsn", "", "PostgreSQL DSN")
 
 	flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")
 	flag.IntVar(&cfg.db.maxidleConns, "db-max-idle-conns", 25, "PostgreSQL max idle connections")
@@ -106,7 +96,14 @@ func main() {
 		},
 	)
 
+	displayVersion := flag.Bool("version", false, "Display version and exit")
+
 	flag.Parse()
+
+	if *displayVersion {
+		fmt.Printf("Version:\t%s\n", version)
+		os.Exit(0)
+	}
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
